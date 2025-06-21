@@ -23,5 +23,8 @@ module MyFirstRailsApp
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Add autoload path for components
+    config.autoload_paths += %W[#{config.root}/app/components]
   end
 end

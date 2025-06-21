@@ -1,0 +1,178 @@
+<div class="max-w-7xl mx-auto space-y-6 mb-24 ">
+  <!-- Dashboard Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    
+    <!-- Daily Expenses Card -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg text-red-600") { "Daily Expenses" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "Outgoing on #{Date.current.strftime('%-d %b')}" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new(class: "space-y-3") do %>
+        <div class="text-2xl font-bold text-red-600">$ <%= number_with_precision(@daily_expense_total, precision: 2) %></div>
+        <% if @today_expenses.any? %>
+          <% @today_expenses.first(3).each do |expense| %>
+            <div class="flex justify-between items-center p-2 bg-red-50 rounded-lg">
+              <span class="text-sm text-gray-700"><%= expense.description %></span>
+              <span class="font-medium text-red-600">$ <%= number_with_precision(expense.amount, precision: 2) %></span>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="text-gray-500 text-sm">No expenses today</p>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <!-- Daily Income Card -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg text-green-600") { "Daily Income" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "Incoming on #{Date.current.strftime('%-d %b')}" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new(class: "space-y-3") do %>
+        <div class="text-2xl font-bold text-green-600">$ <%= number_with_precision(@daily_income_total, precision: 2) %></div>
+        <% if @today_income.any? %>
+          <% @today_income.first(3).each do |income| %>
+            <div class="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+              <span class="text-sm text-gray-700"><%= income.description %></span>
+              <span class="font-medium text-green-600">$ <%= number_with_precision(income.amount, precision: 2) %></span>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="text-gray-500 text-sm">No income today</p>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <!-- Top Expense Categories -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg") { "Top Expenses" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "Category breakdown" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new(class: "space-y-4") do %>
+        <% @category_totals.each do |category, amount| %>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700"><%= category %></span>
+              <span class="font-semibold text-red-600">$ <%= number_with_delimiter(number_with_precision(amount, precision: 2)) %></span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-red-500 h-2 rounded-full" style="width: <%= [amount.to_f / @category_totals.first[1].to_f * 100, 100].min %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <!-- Top Income Categories -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg") { "Top Income" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "Source breakdown" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new(class: "space-y-4") do %>
+        <% @income_category_totals.each do |category, amount| %>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700"><%= category %></span>
+              <span class="font-semibold text-green-600">$ <%= number_with_delimiter(number_with_precision(amount, precision: 2)) %></span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-green-500 h-2 rounded-full" style="width: <%= [amount.to_f / @income_category_totals.first[1].to_f * 100, 100].min %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Second Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Monthly Trend Chart -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg") { "Monthly Trend" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "Income vs Expenses" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new do %>
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-green-600">$ <%= number_with_precision(@monthly_income_total, precision: 2) %></div>
+              <div class="text-sm text-gray-500">Income</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-red-600">$ <%= number_with_precision(@monthly_expense_total, precision: 2) %></div>
+              <div class="text-sm text-gray-500">Expenses</div>
+            </div>
+          </div>
+          <!-- Simple bar chart representation -->
+          <div class="flex items-end space-x-1 h-20">
+            <% @monthly_trends.each_with_index do |trend, index| %>
+              <div class="flex-1 flex flex-col justify-end space-y-1">
+                <div class="bg-green-400 rounded-t" style="height: <%= [trend[:income] / @monthly_trends.map { |t| [t[:income], t[:expenses]].max }.max * 80, 5].max %>px"></div>
+                <div class="bg-red-400 rounded-b" style="height: <%= [trend[:expenses] / @monthly_trends.map { |t| [t[:income], t[:expenses]].max }.max * 80, 5].max %>px"></div>
+              </div>
+            <% end %>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span class="text-green-600">■ Income</span>
+            <span class="text-red-600">■ Expenses</span>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <!-- Quick Add Expense -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg") { "Quick Add Expense" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "What did you spend today?" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new do %>
+        <%= form_with model: @new_expense, local: true, class: "space-y-4" do |form| %>
+          <%= form.hidden_field :transaction_type, value: 'expense' %>
+          <div>
+            <%= form.text_field :description, placeholder: "Lunch at restaurant", class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <div>
+            <%= form.select :category, options_for_select(@expense_categories.map { |c| [c.name, c.name] }, "Food"), {}, { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" } %>
+          </div>
+          <div>
+            <%= form.number_field :amount, placeholder: "Amount", step: 0.01, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <div>
+            <%= render RubyUI::Button.new(type: "submit", class: "w-full bg-red-600 text-white hover:bg-red-700") { "Add Expense →" } %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <!-- Quick Add Income -->
+    <%= render RubyUI::Card.new(class: "col-span-1") do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg") { "Quick Add Income" } %>
+        <%= render RubyUI::CardDescription.new(class: "text-gray-500") { "What did you earn today?" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new do %>
+        <%= form_with model: @new_expense, local: true, class: "space-y-4" do |form| %>
+          <%= form.hidden_field :transaction_type, value: 'income' %>
+          <div>
+            <%= form.text_field :description, placeholder: "Freelance payment", class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" %>
+          </div>
+          <div>
+            <%= form.select :category, options_for_select(@income_categories.map { |c| [c.name, c.name] }, "Salary"), {}, { class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" } %>
+          </div>
+          <div>
+            <%= form.number_field :amount, placeholder: "Amount", step: 0.01, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" %>
+          </div>
+          <div>
+            <%= render RubyUI::Button.new(type: "submit", class: "w-full bg-green-600 text-white hover:bg-green-700") { "Add Income →" } %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

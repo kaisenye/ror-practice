@@ -1,0 +1,104 @@
+<div class="max-w-2xl mx-auto">
+  <% is_income = @expense.transaction_type == 'income' %>
+  <% title = is_income ? "Add New Income" : "Add New Expense" %>
+  <% description = is_income ? "Track your earnings by adding a new income source" : "Track your spending by adding a new expense" %>
+  
+  <%= render RubyUI::Card.new do %>
+    <%= render RubyUI::CardHeader.new do %>
+      <%= render RubyUI::CardTitle.new(class: "text-2xl") { title } %>
+      <%= render RubyUI::CardDescription.new(class: "text-gray-600") { description } %>
+    <% end %>
+    
+    <%= render RubyUI::CardContent.new do %>
+      <%= form_with model: @expense, local: true, class: "space-y-6" do |form| %>
+        <% if @expense.errors.any? %>
+          <div class="bg-red-50 border border-red-200 rounded-md p-4">
+            <h4 class="text-red-800 font-medium">Please fix the following errors:</h4>
+            <ul class="mt-2 text-sm text-red-700">
+              <% @expense.errors.full_messages.each do |message| %>
+                <li>• <%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%= form.hidden_field :transaction_type %>
+
+        <div class="space-y-2">
+          <%= form.label :description, class: "block text-sm font-medium text-gray-700" %>
+          <%= form.text_field :description, 
+                placeholder: is_income ? "e.g., Freelance project payment" : "e.g., Lunch at restaurant", 
+                class: is_income ? "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" : "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" %>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :amount, class: "block text-sm font-medium text-gray-700" %>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-gray-500">$</span>
+            <%= form.number_field :amount, 
+                  placeholder: "0.00", 
+                  step: 0.01,
+                  class: is_income ? "w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" : "w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" %>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :category, class: "block text-sm font-medium text-gray-700" %>
+          <% category_options = is_income ? @income_categories : @expense_categories %>
+          <%= form.select :category, 
+                options_for_select(category_options.map { |c| [c.name, c.name] }), 
+                { prompt: "Select a category" },
+                { class: is_income ? "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" : "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" } %>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :date, class: "block text-sm font-medium text-gray-700" %>
+          <%= form.date_field :date, 
+                value: Date.current,
+                class: is_income ? "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" : "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" %>
+        </div>
+
+        <div class="flex space-x-4 pt-4">
+          <%= link_to root_path, 
+                class: "flex-1 py-2 px-4 border border-gray-300 rounded-md text-center text-gray-700 hover:bg-gray-50 transition-colors" do %>
+            Cancel
+          <% end %>
+          <% if is_income %>
+            <%= render RubyUI::Button.new(type: "submit", class: "flex-1 bg-green-600 text-white hover:bg-green-700") { "Add Income" } %>
+          <% else %>
+            <%= render RubyUI::Button.new(type: "submit", class: "flex-1 bg-red-600 text-white hover:bg-red-700") { "Add Expense" } %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
+  
+  <!-- Quick Add Categories -->
+  <div class="mt-6">
+    <%= render RubyUI::Card.new do %>
+      <%= render RubyUI::CardHeader.new do %>
+        <%= render RubyUI::CardTitle.new(class: "text-lg") { "Quick Add" } %>
+        <%= render RubyUI::CardDescription.new { "Common #{is_income ? 'income' : 'expense'} categories" } %>
+      <% end %>
+      <%= render RubyUI::CardContent.new do %>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <% category_options = is_income ? @income_categories : @expense_categories %>
+          <% category_options.each do |category| %>
+            <button type="button" 
+                    onclick="setCategory('<%= category.name %>')"
+                    class="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <span class="text-2xl mb-1"><%= category.icon %></span>
+              <span class="text-sm text-gray-700"><%= category.name %></span>
+            </button>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  function setCategory(categoryName) {
+    document.getElementById('expense_category').value = categoryName;
+  }
+</script>
